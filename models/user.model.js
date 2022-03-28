@@ -2,19 +2,19 @@ const mongoose = require("mongoose");
 
 const Schema = mongoose.Schema;
 
-const { Food } = require("../models/food.model");
 
 const userSchema = new Schema({
-	username: { type: String, required: true},
+	email: { type: String, required: true, unique: true, trim: true },
 	password: { type: String, required: true},
+	name: { type: String, required: true},
     food: {
 		type: [mongoose.Schema.ObjectId],
-		ref: Food,
+		ref: "Food",
 		required: false,
 		default: [],
-	}
+	},
 });
 
-const User = mongoose.model("User", userSchema);
+const User = mongoose.model("User", userSchema, "user");
 
 module.exports = User;
