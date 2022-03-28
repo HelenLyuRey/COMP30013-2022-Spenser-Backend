@@ -4,19 +4,20 @@ const app = express();
 app.use(express.static(path.join(__dirname, "uploads")));
 const cors = require("cors");
 const axios = require("axios");
-const port = process.env.PORT || 3005;
+const port = process.env.PORT || 2000;
 
 const flash = require("connect-flash");
 
 // const session = require("express-session");
 const { json } = require("body-parser");
-// const mainRounter = require("./routes/main");
+const mainRounter = require("./routes/main");
 
 require("./models/index.js");
 require("./models");
 
 const corsOptions = {
 	origin: "*",
+	// origin: "http://localhost:3000",
 	credentials: true, //access-control-allow-credentials:true
 	optionSuccessStatus: 200,
 };
@@ -42,11 +43,20 @@ app.use(express.static("public")); // define where static assets live
 
 axios.create({
 	// baseURL: `https://aos-infolounge-back.herokuapp.com/`,
-	baseURL : `http://localhost:3000`,
+	baseURL : `http://localhost:2000`,
 });
-app.options("*", cors());
-// app.use("", mainRounter);
 
+app.options("*", cors());
+app.use("", mainRounter);
+
+// setup a session store signing the contents using the secret key
+// app.use(
+// 	session({
+// 		secret: process.env.PASSPORT_KEY,
+// 		resave: true,
+// 		saveUninitialized: true,
+// 	})
+// );
 
 app.use(flash());
 app.use(json());
