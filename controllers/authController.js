@@ -96,8 +96,8 @@ async function login(req, res) {
 			let isValidPassword = req.body.password == user.password;
 			if (isValidPassword) {
 				// if (user.status == "Active") {
-					user.loginStatus = true;
-					user.save();
+					// user.loginStatus = true;
+					// user.save();
 					res.status(200).json({
 						code: 0,
 						msg: "Login Success!",

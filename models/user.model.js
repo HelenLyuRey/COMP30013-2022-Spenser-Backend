@@ -13,6 +13,7 @@ const userSchema = new Schema({
 		required: false,
 		default: [],
 	},
+	// loginStatus: { type: Boolean, required: false },
 });
 
 const User = mongoose.model("User", userSchema, "user");
