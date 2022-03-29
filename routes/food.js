@@ -1,14 +1,17 @@
 const router = require("express").Router();
 
 const {
-    findEntityTotalExpense,
-    findCollectionExpense,
+    updateUserFoodEntityTotalExpense,
+    updateUserFoodCollectionExpense,
+    addNewFood,
 }
  = require("../controllers/foodController");
 
 
-router.get("/entityExpense", findEntityTotalExpense); 
-router.get("/totalExpense", findCollectionExpense); 
+router.post("/updateUserFoodEntityTotalExpense/:id", updateUserFoodEntityTotalExpense); 
+router.post("/updateUserFoodCollectionExpense/:id", updateUserFoodCollectionExpense); 
+router.post("/addFood/:id", addNewFood) // user id, will need t change the link later
+// figure out how to add while user speaks 
 
 
 module.exports = router;
