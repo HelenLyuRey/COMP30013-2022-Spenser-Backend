@@ -7,7 +7,7 @@ const expenseSchema = new Schema({
 	entity: { type: String, required: true},
     description: { type: String, required: false },
     expense: { type: Number, required: true },
-	date: { type: Date, required: true},
+	month: { type: String, required: true},
 });
 
 const Expense = mongoose.model("Expense", expenseSchema, "expense");

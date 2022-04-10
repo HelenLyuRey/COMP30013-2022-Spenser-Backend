@@ -15,8 +15,8 @@ const userSchema = new Schema({
 		required: false,
 		default: [],
 	},
-	current_month_collection_expense: {type: Number, required: false},
-	current_month_entity_expense: {type: Number, required: false},
+	current_month_category_expense:  {type: Object, required: true},
+	current_month_entity_expense: {type: Array, required: true, default: []}, // array of objects
 	current_month_total_expense: {type: Number, required: false},
 	current_month_total_income: {type: Number, required: false},
 	current_month_balance: {type: Number, required: false},
