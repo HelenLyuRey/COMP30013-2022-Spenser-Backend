@@ -1,9 +1,11 @@
 const router = require("express").Router();
 
 const {
-    updateUserTotalExpense,
+    getUser,
+    updateUserProfile
 }= require("../controllers/userController");
 
-router.post("/updateUserTotalExpense/:id", updateUserTotalExpense); 
+router.get("/profile/:id", getUser);
+router.post("/updateProfile/:id ", updateUserTotalExpense); 
 
 module.exports = router;

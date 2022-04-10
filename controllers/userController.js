@@ -1,37 +1,65 @@
 
-// // userTotalSpending --
-// // now we only have expense collection and expenseTotal is calculated in expense controller
-// // but later we would have more collections such as transport/ shops ect
-// // the total expense will need to add them as well
+// userTotalSpending --
+// now we only have expense collection and expenseTotal is calculated in expense controller
+// but later we would have more collections such as transport/ shops ect
+// the total expense will need to add them as well
 
 
-// const User = require("../models/user.model");
+const User = require("../models/user.model");
 
-// // Current month total expense: 
-// // 			loop thorugh all expenses and add them together
-// const updateUserTotalExpense = async (req, res) => {
-//     try {
-//         let total_expense = 0;
-// 		const user = await User.findById(req.params.id);	
 
-// 		const expense_lst = user.expense_list
-// 		const total_expense = 0;
+/**
+ * Functionality: GET user with its information
+ * Usage(URL): /user/profile/:id   
+ * Usage: profile page - display user profile
+ */
+const getUser = async (req, res) => {
+	User.findById(req.params.id)
+		.then((user) => {
+			res.status(200).json(user);
+		})
+		.catch((err) => res.status(400).json(`Error` + err));
+};
 
-//         if(user.collection_expense.Expense_expense != undefined){
-// 			total_expense = total_expense + expense_expense;
-// 		}
 
-// 		user.total_spending = total_expense;
-// 		user.save().then(() => res.json("user total expense updated"));
-// 		// console.log(user.collection_expense.drinkexpense);
-        
-// 	} catch (err) {
-// 		console.log(err)
-// 		res.status(400)
-// 		return res.send("Database query failed")
-// 	}
-// }
+/**
+ * Functionality: Update  User Profile information
+ * Usage(URL): /user/updateProfile/:id                     
+ * method: Post
+ * Parameter: {
+ *       name,
+ *       password,
+ *       agent_voice,
+ *       agent_personality
+ * }
+ * Response Data: {
+ *       "user updated"
+ * }
+ */
+const updateUserProfile = async (req, res) => {
+	await User.findById(req.params.id)
+		.then((user) => {
+            if (req.body.name) {
+				user.name = req.body.name;
+			}
+			if (req.body.password) {
+				user.password = req.body.password;
+			}
+            if (req.body.agent_voice) {
+				user.agent_voice = req.body.agent_voice;
+			}
+            if (req.body.agent_personality) {
+				user.agent_personality = req.body.agent_personality;
+			}
+			
+			user.save()
+				.then(() => res.status(200).json(user))
+				.catch((err) => res.json("Error: " + err));
+		})
+		.catch((err) => res.json("Error: " + err));
+};
 
-// module.exports = {
-// 	updateUserTotalExpense,
-// };
+module.exports = {
+	getUser,
+    updateUserProfile
+};
