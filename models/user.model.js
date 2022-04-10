@@ -7,16 +7,19 @@ const userSchema = new Schema({
 	email: { type: String, required: true, unique: true, trim: true },
 	password: { type: String, required: true},
 	name: { type: String, required: true},
-    food: {
+	agent_voice: { type: String, required: false}, // string for now, can be changed later 
+	agent_personality: { type: String, required: false},
+    expense_list: {
 		type: [mongoose.Schema.ObjectId],
-		ref: "Food",
+		ref: "Expense",
 		required: false,
 		default: [],
 	},
-	entity_expense: {type: Object, required: false},
-	collection_expense: {type: Object, required: false},
-	total_spending: { type: Number, required: false},
-	// loginStatus: { type: Boolean, required: false },
+	current_month_collection_expense: {type: Number, required: false},
+	current_month_entity_expense: {type: Number, required: false},
+	current_month_total_expense: {type: Number, required: false},
+	current_month_total_income: {type: Number, required: false},
+	current_month_balance: {type: Number, required: false},
 });
 
 const User = mongoose.model("User", userSchema, "user");
