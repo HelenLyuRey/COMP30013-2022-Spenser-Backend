@@ -158,7 +158,6 @@ const addNewExpense = async (req, res) => {
 };
 
 module.exports = {
-	updateUserEntityTotalExpense,
-	updateUserCategoryExpense,
+	calculateUserCategoryEntityTotalExpense,
 	addNewExpense,
 };

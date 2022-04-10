@@ -1,15 +1,13 @@
 const router = require("express").Router();
 
 const {
-    updateUserEntityTotalExpense,
-    updateUserCategoryExpense,
+    calculateUserCategoryEntityTotalExpense,
     addNewExpense,
 }
  = require("../controllers/expenseController");
 
 
-router.post("/updateUserExpenseEntityTotalExpense/:id", updateUserEntityTotalExpense); 
-router.post("/updateUserExpenseCollectionExpense/:id", updateUserCategoryExpense); 
+router.post("/calculateUserCategoryEntityTotalExpense/:id", calculateUserCategoryEntityTotalExpense); 
 router.post("/addExpense/:id", addNewExpense) // user id, will need t change the link later
 // figure out how to add while user speaks 
 
