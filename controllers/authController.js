@@ -89,9 +89,10 @@ async function login(req, res) {
 	user = await User.findOne({
 		email: req.body.email,
 	});
-
+	// console.log('hi')
 	// found the user with correct email
 	if (user) {
+		// console.log('inside if')
 		try {
 			let isValidPassword = req.body.password == user.password;
 			if (isValidPassword) {

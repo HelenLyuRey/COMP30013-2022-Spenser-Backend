@@ -4,7 +4,7 @@ const {
     calculateUserIncomeExpense,
 	addNewExpense,
 	getCurrentMonth,
-	getMonthlyExpenseIncomeBalance
+	calculateMonthlyExpenseIncomeBalance
 }
  = require("../controllers/expenseController");
 
@@ -15,7 +15,7 @@ router.post("/addExpense/:id", addNewExpense) // user id, will need t change the
 
 // Only for testing purpose
 router.get("/month", getCurrentMonth)
-router.get("/getMonthlyExpenseIncomeBalance/:id", getMonthlyExpenseIncomeBalance)
+router.post("/calculateMonthlyExpenseIncomeBalance/:id", calculateMonthlyExpenseIncomeBalance)
 
 
 module.exports = router;

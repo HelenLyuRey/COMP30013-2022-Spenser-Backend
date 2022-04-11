@@ -37,6 +37,7 @@ const getUser = async (req, res) => {
  * }
  */
 const updateUserProfile = async (req, res) => {
+	console.log("not even here?")
 	await User.findById(req.params.id)
 		.then((user) => {
             if (req.body.name) {

@@ -64,6 +64,7 @@ app.use(express.static(path.join(__dirname, "public")));
 
 
 app.all("*", (req, res) => {
+	console.log('here?')
 	console.log("Page Not Found!");
 	res.status(404).json({ code: -1, msg: "Page Not Found!" });
 });
