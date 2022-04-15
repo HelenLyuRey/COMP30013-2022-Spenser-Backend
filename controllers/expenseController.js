@@ -178,19 +178,6 @@ const addNewExpense = async (req, res) => {
 
 
 
-// GET current month name
-// ** FE usage: dashboard
-const getCurrentMonth = (req, res) => {
-	const month = ["January","February","March","April","May",
-				"June","July","August","September","October","November","December"];
-	const d = new Date();
-	let month_name = month[d.getMonth()];
-
-	res.status(200).json({"Month": month_name});
-	// return month_name
-}
-
-
 // POST: calculate the Expense + Income + Balance amount and update user
 const calculateMonthlyExpenseIncomeBalance = async (req, res) => {
 	try{
@@ -297,6 +284,5 @@ const getMonthValues = async (lst, match_type) => {
 module.exports = {
 	calculateUserIncomeExpense,
 	addNewExpense,
-	getCurrentMonth,
 	calculateMonthlyExpenseIncomeBalance
 };
