@@ -17,120 +17,158 @@ var ObjectId = mongoose.Types.ObjectId;
 //  4. current_month_total_income
 //  5. current_month_balance
 
-
-// This is a dump way of writting it, can change into a dictionary later when have time
 const calculateUserIncomeExpense = async (req, res) => {
-    try {
-
+	try {
+		const wanted_month = req.body.month;
+		// console.log(month_name)
 		const user = await User.findById(req.params.id);
 		const expense_list = user.expense_list; // a list of expense id
-		const all_entities = []
+		const all_categories_expense = [];
 
 		// INCOME
-		let income = 0
+		let income = 0;
 
-		// FOOD category
-		let food_category_total_expense = 0
-		let snack_expense = 0
-		let meal_expense = 0
-		let drink_expense = 0
-		let grocery_expense = 0
-		let fresh_produce_expense = 0
+		// Total expense (sum of all category expense)
+		let total_expense = 0;
 
-		// SHOP category
-		let shop_category_total_expense = 0
-		let clothes_expense = 0
-		let accessories_expense = 0
-		let cosmetics_expense = 0
+		// Category expense (sum of category's entities' expense)
+		let all_category_expense = {
+			'shop': 0,
+			'food': 0,
+			'housing': 0,
+			'education': 0,
+			'transport': 0,
+			'entertainment': 0,
+			'gift_donation': 0,
+			'healthcare': 0, 
+			'investment': 0,
+			'other': 0
+		}
+
+		//Category's corresponding entity expense (add expense to entity each time)
+		let all_category_entity_expense = {
+			'shop':{
+				'clothing': 0,
+				'accessory': 0,
+				'cosmetic': 0,
+				'electronic_device': 0,
+				'kitchenware': 0,
+				'daily_necessity': 0,
+				'pet_supply': 0,
+				'baby_product': 0,
+
+			},
+			'food':{
+				'meal': 0,
+				'snack': 0,
+				'fresh_produce': 0,
+				'grocery': 0,
+				'drink': 0
+			},
+			'housing':{
+				'home_applicance': 0,
+				'furniture': 0,
+				'housing_payment': 0,
+				'car_maintenance': 0,
+				'utility': 0,
+			},
+			'education':{
+				'education_general': 0,
+				'stationery': 0,
+			},
+			'transport': {
+				'transport': 0,
+			},
+			'entertainment': {
+				'entertainment': 0,
+			},
+			'gift_donation': {
+				'gift_donation': 0,
+			},
+			'healthcare': {
+				'healthcare': 0,
+			},
+			'investment': {
+				'investment': 0,
+			},
+			'other': {
+				'other': 0,
+			},	
+		}
+
+		const all_categories = Object.keys(all_category_entity_expense)
 
 		if (expense_list.length != 0){
 			for (let i = 0; i < expense_list.length; i++) {
 				const expense_object = await Expense.findById(expense_list[i]);
-				console.log(expense_object)
 				const expense = expense_object.expense
+				const expense_month = expense_object.month
 
-				// Calculating total INCOME
-				if(expense_object.type == 'income'){
-					income += expense
-				}
-
-				else if (expense_object.type == 'spending'){
-					if(expense_object.category == 'food' ){
-						if (expense_object.entity == "snack"){
-							snack_expense += expense; 
-						}
-						if (expense_object.entity == "meal"){
-							meal_expense += expense; 
-						}
-						if (expense_object.entity == "drink"){
-							drink_expense += expense; 
-						}
-						if (expense_object.entity == "grocery shopping"){
-							grocery_expense += expense; 
-						}
-						if (expense_object.entity == "fresh produce"){
-							fresh_produce_expense += expense; 
-						}
-						food_category_total_expense += expense;
+				// Only get the month wnat to be displayed 
+				if(expense_month === wanted_month){
+					// Calculating total INCOME
+					if(expense_object.type == 'income'){
+						income += expense
 					}
-
-					if(expense_object.category == 'shop' ){
-						if (expense_object.entity == "clothes"){
-							clothes_expense = clothes_expense + expense; 
-						}
-						if (expense_object.entity == "accessories"){
-							accessories_expense = accessories_expense + expense; 
-						}
-						if (expense_object.entity == "cosmetics"){
-							cosmetics_expense = cosmetics_expense + expense; 
-						}
-						shop_category_total_expense += expense;
+					
+					// Add to entity expense
+					else if (expense_object.type == 'spending'){
+						// All category names
+						const all_categories = Object.keys(all_category_entity_expense)
+						all_categories.forEach(function (category, i) {
+							if(expense_object.category == category){
+								// All entity names within that category
+								const all_entities = Object.keys(all_category_entity_expense[category])
+								all_entities.forEach(function(entity, j){
+									if(expense_object.entity == entity){
+										all_category_entity_expense[category][entity] += expense // add expense of that entity
+										all_entities.push(all_category_entity_expense[category])
+									}
+								})
+							}
+						});
 					}
 				}
 			}
 		}
-			
-		// ENTITY expense
-		const food_entity_expense = 
-		{
-			"snack_expense": snack_expense,
-			"meal_expense": meal_expense,
-			"drink_expense": drink_expense,
-			"grocery_expense": grocery_expense,
-			"fresh_produce_expense": fresh_produce_expense,
-		};
 
-		all_entities.push(food_entity_expense)
-		const shop_entity_expense = 
-		{
-			"clothes_expense": clothes_expense,
-			"accessories_expense": accessories_expense,
-			"cosmetics_expense": cosmetics_expense,
-		};
-		all_entities.push(shop_entity_expense)
+		// Calculate each category total expense (sum of all entities)
+		all_categories.forEach(function (category, i) {
+			all_category_expense[category] = sum(all_category_entity_expense[category])
+		});
 
+		// Calculate total expense
+		total_expense = sum(all_category_expense)
 
-		// CATEGORY expense
-		const category_expense = {
-			"food_category_expense": food_category_total_expense,
-			"shop_category_expense": shop_category_total_expense,
-		}
-
-		const total_expense = food_category_total_expense + shop_category_total_expense;
-
-		user.current_month_category_expense = category_expense;
-		user.current_month_entity_expense = all_entities;
+		user.current_month_category_expense = all_category_expense;
+		user.current_month_entity_expense = all_category_entity_expense;
 		user.current_month_total_expense = total_expense;
 		user.current_month_total_income = income;
 		user.current_month_balance = income - total_expense;
-		user.save().then(() => res.json("user expenses summary updated"));
+			
+		user.save().then(() => res.json(
+			`user expenses summary updated for ${wanted_month}`
+			));
 	
 	} catch (err) {
 		console.log(err);
 		res.status(400);
 		return res.send("Database query failed");
 	}
-};
+}
+
+// To find the sum of json object value
+function sum( obj ) {
+	var sum = 0;
+	for( var el in obj ) {
+	  if( obj.hasOwnProperty( el ) ) {
+		sum += parseFloat( obj[el] );
+	  }
+	}
+	return sum;
+  }
+
+
 
 // POST: add new EXPENSE to USER:  inside User collection expense list
 //	** if it is income, the category attribute will be income
