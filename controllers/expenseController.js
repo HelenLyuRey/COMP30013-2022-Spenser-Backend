@@ -25,131 +25,82 @@ const calculateUserIncomeExpense = async (req, res) => {
 		const expense_list = user.expense_list; // a list of expense id
 		const all_categories_expense = [];
 
-		// INCOME
-		let income = 0;
 
-		// Total expense (sum of all category expense)
-		let total_expense = 0;
-
-		// Category expense (sum of category's entities' expense)
-		let all_category_expense = {
-			'shop': 0,
-			'food': 0,
-			'housing': 0,
-			'education': 0,
-			'transport': 0,
-			'entertainment': 0,
-			'gift_donation': 0,
-			'healthcare': 0, 
-			'investment': 0,
-			'other': 0
-		}
-
-		//Category's corresponding entity expense (add expense to entity each time)
-		let all_category_entity_expense = {
-			'shop':{
-				'clothing': 0,
-				'accessory': 0,
-				'cosmetic': 0,
-				'electronic_device': 0,
-				'kitchenware': 0,
-				'daily_necessity': 0,
-				'pet_supply': 0,
-				'baby_product': 0,
-
-			},
-			'food':{
-				'meal': 0,
-				'snack': 0,
-				'fresh_produce': 0,
-				'grocery': 0,
-				'drink': 0
-			},
-			'housing':{
-				'home_applicance': 0,
-				'furniture': 0,
-				'housing_payment': 0,
-				'car_maintenance': 0,
-				'utility': 0,
-			},
-			'education':{
-				'education_general': 0,
-				'stationery': 0,
-			},
-			'transport': {
-				'transport': 0,
-			},
-			'entertainment': {
-				'entertainment': 0,
-			},
-			'gift_donation': {
-				'gift_donation': 0,
-			},
-			'healthcare': {
-				'healthcare': 0,
-			},
-			'investment': {
-				'investment': 0,
-			},
-			'other': {
-				'other': 0,
-			},	
-		}
-
-		const all_categories = Object.keys(all_category_entity_expense)
+		// Category + entity + description expense --> json inside json inside json
+		let description_json = {}
+		
+		const entity_keys = []
+		const description_keys = []
 
 		if (expense_list.length != 0){
 			for (let i = 0; i < expense_list.length; i++) {
 				const expense_object = await Expense.findById(expense_list[i]);
+
+				const category = expense_object.category
+				const entity = expense_object.entity
+				const description = expense_object.description
 				const expense = expense_object.expense
 				const expense_month = expense_object.month
 
-				// Only get the month wnat to be displayed 
-				if(expense_month === wanted_month){
-					// Calculating total INCOME
-					if(expense_object.type == 'income'){
-						income += expense
+				if(expense_month.toLowerCase() === wanted_month.toLowerCase()){
+					const category_keys = Object.keys(description_json)
+					if (!category_keys.includes(category)){
+						description_json[category] = {}
 					}
-					
-					// Add to entity expense
-					else if (expense_object.type == 'spending'){
-						// All category names
-						const all_categories = Object.keys(all_category_entity_expense)
-						all_categories.forEach(function (category, i) {
-							if(expense_object.category == category){
-								// All entity names within that category
-								const all_entities = Object.keys(all_category_entity_expense[category])
-								all_entities.forEach(function(entity, j){
-									if(expense_object.entity == entity){
-										all_category_entity_expense[category][entity] += expense // add expense of that entity
-										all_entities.push(all_category_entity_expense[category])
-									}
-								})
-							}
-						});
+					const entity_keys = Object.keys(description_json[category])
+					if (!entity_keys.includes(entity)){
+						description_json[category][entity] = {}
+					}
+
+					if(description === ""){
+						if (description_json[category][entity]['general'] === undefined){
+							description_json[category][entity]['general'] = expense
+						}
+						else{
+							description_json[category][entity]['general'] += expense
+						}
+						}
+						else{
+						if (description_json[category][entity][description] === undefined){
+							description_json[category][entity][description] = expense
+						}
+						else{
+							description_json[category][entity][description] += expense
+						}
 					}
 				}
 			}
 		}
 
+		// Category + entity expense --> json inside json
+		let entity_json = JSON.parse(JSON.stringify(description_json))
+		for (var cat_key in entity_json) {
+			for(var ent_key in entity_json[cat_key]){
+				entity_json[cat_key][ent_key] = sum(entity_json[cat_key][ent_key])
+			}
+		}
+
 		// Calculate each category total expense (sum of all entities)
+		const all_categories = Object.keys(entity_json)
+		let category_json = JSON.parse(JSON.stringify(entity_json))
 		all_categories.forEach(function (category, i) {
-			all_category_expense[category] = sum(all_category_entity_expense[category])
+			category_json[category] = sum(category_json[category])
 		});
 
-		// Calculate total expense
-		total_expense = sum(all_category_expense)
+		//Calculate total expense
+		total_expense = sum(category_json) - category_json.income
 
-		user.current_month_category_expense = all_category_expense;
-		user.current_month_entity_expense = all_category_entity_expense;
+		user.current_month_category_expense = category_json;
+		user.current_month_entity_expense = entity_json;
+		user.current_month_description_expense = description_json;
 		user.current_month_total_expense = total_expense;
-		user.current_month_total_income = income;
-		user.current_month_balance = income - total_expense;
+		user.current_month_total_income = category_json.income;
+		user.current_month_balance = category_json.income - total_expense;
 			
 		user.save().then(() => res.json(
 			`user expenses summary updated for ${wanted_month}`
 			));
-	
+
 	} catch (err) {
 		console.log(err);
 		res.status(400);
@@ -176,17 +127,12 @@ function sum( obj ) {
 
 const addNewExpense = async (req, res) => {
 
-	// const month = ["January","February","March","April","May",
-	// 			"June","July","August","September","October","November","December"];
-	// const d = new Date();
-	// let month_name = month[d.getMonth()];
-
 	const type = req.body.type;
 	const category = req.body.category;
 	const entity = req.body.entity;
 	const description = req.body.description;
 	const expense = req.body.expense;
-	// const current_month = month_name;
+	// const month = req.body.month;
 
 	const newExpense = new Expense({
 		type,
@@ -194,7 +140,7 @@ const addNewExpense = async (req, res) => {
 		entity,
 		description,
 		expense,
-		// current_month,
+		// month,
 	});
 
 	newExpense
