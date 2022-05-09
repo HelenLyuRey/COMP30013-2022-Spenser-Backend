@@ -23,7 +23,8 @@ const userSchema = new Schema({
 	current_month_balance: {type: Number, required: false, default: 0},
 	monthly_expense: {type: Object, required: false},
 	monthly_income: {type: Object, required: false},
-	monthly_balance: {type: Object, required: false}
+	monthly_balance: {type: Object, required: false},
+	month: { type: String, required: false},
 });
 
 const User = mongoose.model("User", userSchema, "user");

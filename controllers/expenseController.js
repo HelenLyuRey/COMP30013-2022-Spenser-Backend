@@ -20,17 +20,20 @@ var ObjectId = mongoose.Types.ObjectId;
 const calculateUserIncomeExpense = async (req, res) => {
 	try {
 		const wanted_month = req.body.month;
-		// console.log(month_name)
+		console.log(wanted_month, 'BE')
 		const user = await User.findById(req.params.id);
 		const expense_list = user.expense_list; // a list of expense id
 		const all_categories_expense = [];
 
+		// console.log()
 
 		// Category + entity + description expense --> json inside json inside json
 		let description_json = {}
 		
 		const entity_keys = []
 		const description_keys = []
+
+		let count = 0
 
 		if (expense_list.length != 0){
 			for (let i = 0; i < expense_list.length; i++) {
@@ -43,6 +46,7 @@ const calculateUserIncomeExpense = async (req, res) => {
 				const expense_month = expense_object.month
 
 				if(expense_month.toLowerCase() === wanted_month.toLowerCase()){
+					count += 1
 					const category_keys = Object.keys(description_json)
 					if (!category_keys.includes(category)){
 						description_json[category] = {}
@@ -72,34 +76,51 @@ const calculateUserIncomeExpense = async (req, res) => {
 			}
 		}
 
-		// Category + entity expense --> json inside json
-		let entity_json = JSON.parse(JSON.stringify(description_json))
-		for (var cat_key in entity_json) {
-			for(var ent_key in entity_json[cat_key]){
-				entity_json[cat_key][ent_key] = sum(entity_json[cat_key][ent_key])
+		// If this month has value
+		if (count !== 0){
+			// Category + entity expense --> json inside json
+			let entity_json = JSON.parse(JSON.stringify(description_json))
+			for (var cat_key in entity_json) {
+				for(var ent_key in entity_json[cat_key]){
+					entity_json[cat_key][ent_key] = sum(entity_json[cat_key][ent_key])
+				}
 			}
+
+			// Calculate each category total expense (sum of all entities)
+			const all_categories = Object.keys(entity_json)
+			let category_json = JSON.parse(JSON.stringify(entity_json))
+			all_categories.forEach(function (category, i) {
+				category_json[category] = sum(category_json[category])
+			});
+
+			//Calculate total expense
+			total_expense = sum(category_json) - category_json.income
+
+			user.current_month_category_expense = category_json;
+			user.current_month_entity_expense = entity_json;
+			user.current_month_description_expense = description_json;
+			user.current_month_total_expense = total_expense;
+			user.current_month_total_income = category_json.income;
+			user.current_month_balance = category_json.income - total_expense;
+			user.month = wanted_month;
+				
+			user.save().then(() => res.json(
+				`user expenses summary updated for ${wanted_month}`
+				));
 		}
-
-		// Calculate each category total expense (sum of all entities)
-		const all_categories = Object.keys(entity_json)
-		let category_json = JSON.parse(JSON.stringify(entity_json))
-		all_categories.forEach(function (category, i) {
-			category_json[category] = sum(category_json[category])
-		});
-
-		//Calculate total expense
-		total_expense = sum(category_json) - category_json.income
-
-		user.current_month_category_expense = category_json;
-		user.current_month_entity_expense = entity_json;
-		user.current_month_description_expense = description_json;
-		user.current_month_total_expense = total_expense;
-		user.current_month_total_income = category_json.income;
-		user.current_month_balance = category_json.income - total_expense;
-			
-		user.save().then(() => res.json(
-			`user expenses summary updated for ${wanted_month}`
-			));
+		else{
+			user.current_month_category_expense = {};
+			user.current_month_entity_expense = {};
+			user.current_month_description_expense = {};
+			user.current_month_total_expense = 0;
+			user.current_month_total_income = 0;
+			user.current_month_balance = 0;
+			user.month = wanted_month;
+				
+			user.save().then(() => res.json(
+				`user expenses summary updated for ${wanted_month}`
+				));
+		}
 
 	} catch (err) {
 		console.log(err);
