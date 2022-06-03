@@ -7,8 +7,7 @@ const userSchema = new Schema({
 	email: { type: String, required: true, unique: true, trim: true },
 	password: { type: String, required: true},
 	name: { type: String, required: true},
-	agent_voice: { type: String, required: false, default: ""}, // string for now, can be changed later 
-	agent_personality: { type: String, required: false, default: ""},
+	agent_voice: { type: String, required: false, default: "Jenny - Neutral female agent"}, // string for now, can be changed later 
     expense_list: {
 		type: [mongoose.Schema.ObjectId],
 		ref: "Expense",

@@ -20,7 +20,7 @@ var ObjectId = mongoose.Types.ObjectId;
 const calculateUserIncomeExpense = async (req, res) => {
 	try {
 		const wanted_month = req.body.month;
-		console.log(wanted_month, 'BE')
+		// console.log(wanted_month, 'BE')
 		const user = await User.findById(req.params.id);
 		const expense_list = user.expense_list; // a list of expense id
 		const all_categories_expense = [];
@@ -37,6 +37,7 @@ const calculateUserIncomeExpense = async (req, res) => {
 
 		if (expense_list.length != 0){
 			for (let i = 0; i < expense_list.length; i++) {
+				
 				const expense_object = await Expense.findById(expense_list[i]);
 
 				const category = expense_object.category
@@ -46,7 +47,9 @@ const calculateUserIncomeExpense = async (req, res) => {
 				const expense_month = expense_object.month
 
 				if(expense_month.toLowerCase() === wanted_month.toLowerCase()){
+					console.log(expense_list[i])
 					count += 1
+
 					const category_keys = Object.keys(description_json)
 					if (!category_keys.includes(category)){
 						description_json[category] = {}
@@ -94,14 +97,25 @@ const calculateUserIncomeExpense = async (req, res) => {
 			});
 
 			//Calculate total expense
-			total_expense = sum(category_json) - category_json.income
+			
+			if(category_json.income === undefined){ 
+				//Only have expense, no income
+				total_expense = sum(category_json)
+				income = 0
+			}else{ 
+				// Have both income and expense + only have income
+				total_expense = sum(category_json) - category_json.income 
+				income = category_json.income 
+			}
+			console.log(total_expense, "expense")
+			console.log(income, "income")
 
 			user.current_month_category_expense = category_json;
 			user.current_month_entity_expense = entity_json;
 			user.current_month_description_expense = description_json;
 			user.current_month_total_expense = total_expense;
-			user.current_month_total_income = category_json.income;
-			user.current_month_balance = category_json.income - total_expense;
+			user.current_month_total_income = income;
+			user.current_month_balance = income - total_expense;
 			user.month = wanted_month;
 				
 			user.save().then(() => res.json(
@@ -149,10 +163,16 @@ function sum( obj ) {
 const addNewExpense = async (req, res) => {
 
 	const type = req.body.type;
-	const category = req.body.category;
-	const entity = req.body.entity;
+	let category = req.body.category;
+	let entity = req.body.entity;
 	const description = req.body.description;
 	const expense = req.body.expense;
+
+	if (type === 'income'){
+		category = 'income'
+		entity = 'income'
+	}
+	
 	// const month = req.body.month;
 
 	const newExpense = new Expense({
@@ -191,6 +211,8 @@ const calculateMonthlyExpenseIncomeBalance = async (req, res) => {
 
 		let monthly_expense = await getMonthValues(expense_list, 'spending')
 		let monthly_income = await getMonthValues(expense_list, 'income')
+
+		// console.log(monthly_income)
 
 		let monthly_balance = {
 			'Jan': monthly_income.Jan - monthly_expense.Jan,

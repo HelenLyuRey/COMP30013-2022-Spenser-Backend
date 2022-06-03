@@ -30,7 +30,6 @@ const getUser = async (req, res) => {
  *       name,
  *       password,
  *       agent_voice,
- *       agent_personality
  * }
  * Response Data: {
  *       "user updated"
@@ -48,10 +47,7 @@ const updateUserProfile = async (req, res) => {
             if (req.body.agent_voice) {
 				user.agent_voice = req.body.agent_voice;
 			}
-            if (req.body.agent_personality) {
-				user.agent_personality = req.body.agent_personality;
-			}
-			
+
 			user.save()
 				.then(() => res.status(200).json(user))
 				.catch((err) => res.json("Error: " + err));
