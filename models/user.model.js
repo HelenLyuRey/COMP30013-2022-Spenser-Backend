@@ -24,6 +24,7 @@ const userSchema = new Schema({
 	monthly_income: {type: Object, required: false},
 	monthly_balance: {type: Object, required: false},
 	month: { type: String, required: false},
+	year:{type: String, required: false}
 });
 
 const User = mongoose.model("User", userSchema, "user");

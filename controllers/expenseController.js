@@ -8,6 +8,7 @@ var ObjectId = mongoose.Types.ObjectId;
 
 // This function will save/ update/ calculate user information of
 // ** Usage: POST user expense related action
+// ** Parameter in: month - string, year - string
 
 // `1. current_month_category_expense
 //	** For CATEGORY: return a json, with all category + price
@@ -20,6 +21,7 @@ var ObjectId = mongoose.Types.ObjectId;
 const calculateUserIncomeExpense = async (req, res) => {
 	try {
 		const wanted_month = req.body.month;
+		const wanted_year = req.body.year;
 		// console.log(wanted_month, 'BE')
 		const user = await User.findById(req.params.id);
 		const expense_list = user.expense_list; // a list of expense id
@@ -45,8 +47,11 @@ const calculateUserIncomeExpense = async (req, res) => {
 				const description = expense_object.description
 				const expense = expense_object.expense
 				const expense_month = expense_object.month
+				const expense_year = expense_object.year
 
-				if(expense_month.toLowerCase() === wanted_month.toLowerCase()){
+				if(expense_month.toLowerCase() === wanted_month.toLowerCase()
+					&& expense_year === wanted_year
+					){
 					console.log(expense_list[i])
 					count += 1
 
@@ -117,9 +122,10 @@ const calculateUserIncomeExpense = async (req, res) => {
 			user.current_month_total_income = income;
 			user.current_month_balance = income - total_expense;
 			user.month = wanted_month;
+			user.year = wanted_year;
 				
 			user.save().then(() => res.json(
-				`user expenses summary updated for ${wanted_month}`
+				`user expenses summary updated for  ${wanted_year} ${wanted_month}`
 				));
 		}
 		else{
@@ -130,9 +136,9 @@ const calculateUserIncomeExpense = async (req, res) => {
 			user.current_month_total_income = 0;
 			user.current_month_balance = 0;
 			user.month = wanted_month;
-				
+			user.year = wanted_year;
 			user.save().then(() => res.json(
-				`user expenses summary updated for ${wanted_month}`
+				`user expenses summary updated for ${wanted_year} ${wanted_month}`
 				));
 		}
 
@@ -173,7 +179,8 @@ const addNewExpense = async (req, res) => {
 		entity = 'income'
 	}
 	
-	// const month = req.body.month;
+	const month = req.body.month;
+	const year = req.body.year;
 
 	const newExpense = new Expense({
 		type,
@@ -181,7 +188,8 @@ const addNewExpense = async (req, res) => {
 		entity,
 		description,
 		expense,
-		// month,
+		month,
+		year,
 	});
 
 	newExpense
@@ -203,14 +211,18 @@ const addNewExpense = async (req, res) => {
 
 
 
-// POST: calculate the Expense + Income + Balance amount and update user
+// ** POST: calculate the Expense + Income + Balance amount and update user
+// ** Parameter in: year - string
 const calculateMonthlyExpenseIncomeBalance = async (req, res) => {
 	try{
 		const user = await User.findById(req.params.id);
 		const expense_list = user.expense_list; // a list of expense id
+		const wanted_year = req.body.year;
 
-		let monthly_expense = await getMonthValues(expense_list, 'spending')
-		let monthly_income = await getMonthValues(expense_list, 'income')
+		let monthly_expense = await getMonthValues(expense_list, 'spending', wanted_year
+		)
+		let monthly_income = await getMonthValues(expense_list, 'income', wanted_year
+		)
 
 		// console.log(monthly_income)
 
@@ -220,8 +232,8 @@ const calculateMonthlyExpenseIncomeBalance = async (req, res) => {
 			'Mar': monthly_income.Mar - monthly_expense.Mar,
 			'Apr': monthly_income.Apr - monthly_expense.Apr,
 			'May': monthly_income.May - monthly_expense.May,
-			'June': monthly_income.June - monthly_expense.June,
-			'July': monthly_income.July - monthly_expense.July,
+			'Jun': monthly_income.Jun - monthly_expense.Jun,
+			'Jul': monthly_income.Jul - monthly_expense.Jul,
 			'Aug': monthly_income.Aug - monthly_expense.Aug,
 			'Sep': monthly_income.Sep - monthly_expense.Sep,
 			'Oct': monthly_income.Oct - monthly_expense.Oct,
@@ -232,7 +244,7 @@ const calculateMonthlyExpenseIncomeBalance = async (req, res) => {
 		user.monthly_expense = monthly_expense;
 		user.monthly_income = monthly_income;
 		user.monthly_balance = monthly_balance;
-		user.save().then(() => res.json("user monthly expenses summary updated"));
+		user.save().then(() => res.json(`user monthly expenses summary updated for ${wanted_year}`));
 
 	}catch (err) {
 		console.log(err);
@@ -241,16 +253,16 @@ const calculateMonthlyExpenseIncomeBalance = async (req, res) => {
 	}
 }
 
-const getMonthValues = async (lst, match_type) => {
+const getMonthValues = async (lst, match_type, wanted_year) => {
 	
-	const monthly_value = {
+	let monthly_value = {
 		'Jan': 0,
 		'Feb': 0,
 		'Mar': 0,
 		'Apr': 0,
 		'May': 0,
-		'June': 0,
-		'July': 0,
+		'Jun': 0,
+		'Jul': 0,
 		'Aug': 0,
 		'Sep': 0,
 		'Oct': 0,
@@ -264,43 +276,14 @@ const getMonthValues = async (lst, match_type) => {
 			const type = expense_object.type;
 			const expense = expense_object.expense;
 			const month = expense_object.month;
-			if (match_type == type){
-				if (month == 'January'){
-					monthly_value.Jan += expense;
-				}
-				if (month == 'February'){
-					monthly_value.Feb += expense;
-				}
-				if (month == 'March'){
-					monthly_value.Mar += expense;
-				}
-				if (month == 'April'){
-					monthly_value.Apr += expense;
-				}
-				if (month == 'May'){
-					monthly_value.May += expense;
-				}
-				if (month == 'June'){
-					monthly_value.June += expense;
-				}
-				if (month == 'July'){
-					monthly_value.July += expense;
-				}
-				if (month == 'August'){
-					monthly_value.Aug += expense;
-				}
-				if (month == 'September'){
-					monthly_value.Sep += expense;
-				}
-				if (month == 'October'){
-					monthly_value.Oct += expense;
-				}
-				if (month == 'November'){
-					monthly_value.Nov += expense;
-				}
-				if (month == 'December'){
-					monthly_value.Dec += expense;
-				}
+			const year = expense_object.year;
+			if (match_type === type && wanted_year === year){
+				const month_name = Object.keys(monthly_value)
+				month_name.forEach((eachmonth)=>{
+					if(eachmonth == month){
+						monthly_value[month] += expense
+					}
+				})
 			}
 		}
 	}
